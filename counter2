@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub Counter Overlay</title>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  background: transparent;
+  font-family: Arial, sans-serif;
+  color: white;
+}
+.counter-display {
+  font-size: 120px;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 40%;
+}
+.controls {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  background: #111;
+  padding: 10px 16px;
+  border-radius: 12px;
+}
+.btn {
+  padding: 8px 12px;
+  background: #0a84ff;
+  border-radius: 8px;
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+}
+.btn.secondary { background: #333; }
+</style>
+</head>
+<body>
+
+<div class="counter-display" id="counter">0</div>
+
+<div class="controls" id="adminPanel">
+  <div class="btn" id="incrementBtn">+1</div>
+  <div class="btn secondary" id="decrementBtn">-1</div>
+  <div class="btn" id="resetBtn">Reset</div>
+</div>
+
+<script>
+let count = 0;
+const counterEl = document.getElementById('counter');
+
+function updateDisplay(){ counterEl.textContent = count; localStorage.setItem('github-counter', count); }
+
+// Load previous count if exists
+const saved = localStorage.getItem('github-counter');
+if(saved){ count = parseInt(saved); updateDisplay(); }
+
+// Buttons
+document.getElementById('incrementBtn').onclick = ()=>{ count++; updateDisplay(); };
+document.getElementById('decrementBtn').onclick = ()=>{ if(count>0) count--; updateDisplay(); };
+document.getElementById('resetBtn').onclick = ()=>{ count=0; updateDisplay(); };
+
+// Keyboard shortcuts
+window.addEventListener('keydown', e=>{
+  if(e.key==='ArrowUp'){ count++; updateDisplay(); }
+  if(e.key==='ArrowDown'){ if(count>0) count--; updateDisplay(); }
+  if(e.key==='r'||e.key==='R'){ count=0; updateDisplay(); }
+});
+
+// OBS auto-refresh fallback
+setInterval(()=>{
+  const obsCount = localStorage.getItem('github-counter');
+  if(obsCount != count){ count = parseInt(obsCount); updateDisplay(); }
+}, 200);
+
+</script>
+</body>
+</html>
