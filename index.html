@@ -62,23 +62,38 @@ function updateDisplay(){ counterEl.textContent = count; localStorage.setItem('g
 const saved = localStorage.getItem('github-counter');
 if(saved){ count = parseInt(saved); updateDisplay(); }
 
+// BroadcastChannel for real-time updates
+let bc = null;
+if('BroadcastChannel' in window){
+    bc = new BroadcastChannel('github-counter-channel');
+    bc.onmessage = (ev)=>{
+        count = ev.data;
+        updateDisplay();
+    };
+}
+
+function sendUpdate(){
+    if(bc) bc.postMessage(count);
+    localStorage.setItem('github-counter', count); // fallback for OBS
+}
+
 // Buttons
-document.getElementById('incrementBtn').onclick = ()=>{ count++; updateDisplay(); };
-document.getElementById('decrementBtn').onclick = ()=>{ if(count>0) count--; updateDisplay(); };
-document.getElementById('resetBtn').onclick = ()=>{ count=0; updateDisplay(); };
+document.getElementById('incrementBtn').onclick = ()=>{ count++; updateDisplay(); sendUpdate(); };
+document.getElementById('decrementBtn').onclick = ()=>{ if(count>0) count--; updateDisplay(); sendUpdate(); };
+document.getElementById('resetBtn').onclick = ()=>{ count=0; updateDisplay(); sendUpdate(); };
 
 // Keyboard shortcuts
 window.addEventListener('keydown', e=>{
-  if(e.key==='ArrowUp'){ count++; updateDisplay(); }
-  if(e.key==='ArrowDown'){ if(count>0) count--; updateDisplay(); }
-  if(e.key==='r'||e.key==='R'){ count=0; updateDisplay(); }
+  if(e.key==='ArrowUp'){ count++; updateDisplay(); sendUpdate(); }
+  if(e.key==='ArrowDown'){ if(count>0) count--; updateDisplay(); sendUpdate(); }
+  if(e.key==='r'||e.key==='R'){ count=0; updateDisplay(); sendUpdate(); }
 });
 
-// OBS auto-refresh fallback
+// OBS fallback: poll localStorage every 10ms for near-instant updates
 setInterval(()=>{
-  const obsCount = localStorage.getItem('github-counter');
-  if(obsCount != count){ count = parseInt(obsCount); updateDisplay(); }
-}, 200);
+    const latest = parseInt(localStorage.getItem('github-counter')||0);
+    if(latest !== count){ count = latest; updateDisplay(); }
+}, 10);
 
 </script>
 </body>
